@@ -1,16 +1,23 @@
 # This script collects statistics about demographics in order to create Fig1. 
 
+import sys
 import numpy as np
 import country_converter
 
+real_data = (len(sys.argv)==1) or int(sys.argv[1])
+
+if not real_data: print('Running on synthetic data')
+
 # paths and names
-directory_base = '/Users/au654912/'
-directory = directory_base + 'CloudOneDrive/Work/data/volBrain/'
-directory_out = directory_base + 'CloudOneDrive/Work/Python/volBrain/out/'
-name_data = 'vol2Brain_931'
+directory = '/Users/au654912/CloudOneDrive/Work/data/main_volbrain_repo/'
+directory_socioecon = directory + 'socioeconomic_data_repo/preprocessed_data/'
+directory_braindata = directory + 'volbrain_repo/preprocessed_data/'
+directory_out = directory + 'results/'
+if real_data: datafile_out = directory_out + 'demographics_vol2Brain_931.npz'
+else: datafile_out = directory_out + 'demographics_vol2Brain_931_synth.npz'
 
 # load socioeconomical data
-datafile = directory + 'wid.npz'
+datafile = directory_socioecon + 'wid.npz'
 datawid = np.load(datafile, allow_pickle=True)
 X = np.copy(datawid['X'])
 countries_wid = np.copy(datawid['country_codes'])
@@ -19,7 +26,8 @@ q = X.shape[1]
 ucountries_wid = np.unique(countries_wid)
 
 # load volbrain data
-datafile = directory + 'preprocessed_data/' + name_data + '.npz'
+if real_data: datafile = directory_braindata + 'vol2Brain_931.npz'
+else: datafile = directory_braindata + 'vol2Brain_931_synth.npz'
 datvb = np.load(datafile, allow_pickle=True)
 confounds = np.copy(datvb['confounds'])
 braindata = np.copy(datvb['braindata'])
@@ -78,7 +86,6 @@ take = ((C != '') & (C != '-'))
 countries_vb = countries_vb[take]
 D = D[take,:]
 C = C[take]
-braindata = braindata[take,:]
 confounds = confounds[take,:]
 
 sex = confounds[:,0]
@@ -95,8 +102,8 @@ mean_age_country_sex = np.zeros((Ncountries,3)) # male, female and all
 mean_ICV = np.zeros((Ncountries))
 
 for j in range(Ncountries):
-    print(j)
     c = ucountries_vb[j]
+    # print(str(j) + ' ' + c)
     idc_vb = (countries_vb == c)
     idc_vb_m =  np.logical_and(idc_vb, sex == +1)
     idc_vb_f =  np.logical_and(idc_vb, sex == -1)
@@ -107,11 +114,9 @@ for j in range(Ncountries):
     mean_age_country_sex[j,2] = np.mean(age[idc_vb])
     mean_ICV[j] = np.mean(ICV[idc_vb])
 
-datafile = directory_out + 'demographics_' + name_data + '.npz'
+print(datafile_out)
 
-print(datafile)
-
-np.savez(datafile, age=age,sex=sex,countries=ucountries_vb,
+np.savez(datafile_out, age=age,sex=sex,countries=ucountries_vb,
          N_country_sex=N_country_sex,mean_ICV=mean_ICV,
          mean_age_country_sex=mean_age_country_sex)
   

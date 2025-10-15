@@ -3,32 +3,49 @@
 # It outputs p-values for each regressor. 
 # This produces the results shown in Fig3BCD (for combination=0,1,2 respectively)
 
+import sys
 import numpy as np
 import func_testing
 import subset_optimisation
 
-repetitions = 5 # number of times we run the analysis
-n_sampled_pairs = 5000 # how many pairs of subjects we are going to sample 
-Nperm =  10000 # number or permutations for the permutation testing. 
+
+real_data = (len(sys.argv)<3) or (int(sys.argv[2])) # real or synthetic data
+fast_run = (len(sys.argv)==4) and (int(sys.argv[3])) # 1 this for a quick sanity-check run
+
+if not real_data: print('Running on synthetic data')
+if fast_run: print('Quick sanity check run')
 
 # 0 for analysis on GII, 1 for analysis on GII and Gini index, 2 for analysis on GII and GDP
-combination = 0  
+combination = sys.argv[1]  
 
-directory = '/Users/au654912/CloudOneDrive/Work/data/volBrain/'
-directory_out = '/Users/au654912/CloudOneDrive/Work/Python/volBrain/out/'  
-name_data = 'vol2Brain_931'
+if not fast_run:
+    repetitions = 5 # number of times we run the analysis
+    Nperm = 10001 # number or permutations for the permutation testing. 
+else:
+    repetitions = 1 # number of times we run the analysis
+    Nperm = 5 # number or permutations for the permutation testing.     
+n_sampled_pairs = 5000 # how many pairs of subjects we are going to sample 
 
-if combination == 0: suffix2 = '_GII' 
-elif combination == 1: suffix2 = '_GIIGini' 
-elif combination == 2: suffix2 = '_GIIGDP' 
+# paths and names
+directory = '/Users/au654912/CloudOneDrive/Work/data/main_volbrain_repo/'
+directory_out = directory + 'results/'
+directory_braindata = directory + 'volbrain_repo/preprocessed_data/'
+if real_data: datafile_braindata = directory_braindata + 'sexDist_vol2Brain_931.npz'
+else: datafile_braindata = directory_braindata + 'sexDist_vol2Brain_931_synth.npz'
+
+if combination == 0: suffix = '_GII' 
+elif combination == 1: suffix = '_GIIGini' 
+elif combination == 2: suffix = '_GIIGDP' 
 
 if combination == 0: ind_wid = (0,)
 elif combination == 1: ind_wid = (0,1)
 elif combination == 2: ind_wid = (0,2)
 
+if real_data: datafile_out = directory_out + 'ttests_vol2Brain_931' + suffix + '.npz'
+else: datafile_out = directory_out + 'ttests_vol2Brain_931' + suffix + '_synth.npz'
+
 # load distance matrices computed in computer_between_sexes_distances.py
-datafile = directory + '/preprocessed_data/sexDist_' + name_data + '.npz'
-data = np.load(datafile, allow_pickle=True)
+data = np.load(datafile_braindata, allow_pickle=True)
 M_Brain = data['M_Brain'] 
 M_WID = data['M_WID'] 
 M_age = data['M_age'] 
@@ -141,16 +158,15 @@ for t in range(T):
     print('time: ' + str(t))
 
 
-datafile = directory_out + 'ttests_' + name_data + suffix + '.npz'
-print(datafile)
+print(datafile_out)
 
 if combination>0:
-    np.savez(datafile, r2=r2, subsample_corr = subsample_corr, original_corr=original_corr,
+    np.savez(datafile_out, r2=r2, subsample_corr = subsample_corr, original_corr=original_corr,
             N_countries_involved=N_countries_involved,
             base_stat_f=base_stat_f,pval_f=pval_f,pval_t=pval_t,
             base_stat_t=base_stat_t,beta=beta,age_grid=age_grid)
 else:
-    np.savez(datafile, r2=r2, base_stat_f=base_stat_f,pval_f=pval_f,pval_t=pval_t,
+    np.savez(datafile_out, r2=r2, base_stat_f=base_stat_f,pval_f=pval_f,pval_t=pval_t,
             base_stat_t=base_stat_t,beta=beta,age_grid=age_grid)
 
 

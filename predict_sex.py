@@ -5,27 +5,39 @@
 # in unseen subjects from each other window
 # This scripts produce the data for Fig 2AEF
 
+import sys
 import numpy as np
 import country_converter
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.linear_model import Ridge, RidgeClassifierCV
 from sklearn import metrics
 import func_testing
-  
+
+real_data = (len(sys.argv)==1) or (int(sys.argv[1])) # real or synthetic data
+fast_run = (len(sys.argv)==3) and (int(sys.argv[2])) # 1 this for a quick sanity-check run
+
+if not real_data: print('Running on synthetic data')
+if fast_run: print('Quick sanity check run')
 
 N_subj = 1000 # minimum number of subjects in the window to run the analysis.
 N_subj_per_sex = 400 # minimum number of subjects per sex in the window to run the analysis.
-nboot = 100 # number of bootstrap interations
 window_length = 10 # width of the age windows
+if fast_run: nboot = 1 # number of bootstrap interations
+else: nboot = 100
 
 # paths and names
-directory = '/Users/au654912/CloudOneDrive/Work/data/volBrain/'
-directory_out = '/Users/au654912/CloudOneDrive/Work/Python/volBrain/out/'    
-name_data = 'vol2Brain_931'
-datafile = directory + 'wid.npz'
+directory = '/Users/au654912/CloudOneDrive/Work/data/main_volbrain_repo/'
+directory_out = directory + 'results/'
+directory_braindata = directory + 'volbrain_repo/preprocessed_data/'
+if real_data: datafile_braindata = directory_braindata + 'vol2Brain_931.npz'
+else: datafile_braindata = directory_braindata + 'vol2Brain_931_synth.npz'
+directory_socioecon = directory + 'socioeconomic_data_repo/preprocessed_data/'
+datafile_socioecon = directory_socioecon + 'wid.npz'
+if real_data: datafile_out = directory_out + 'predict_sex_vol2Brain_931.npz'
+else: datafile_out = directory_out + 'predict_sex_vol2Brain_931_synth.npz'
 
 # load countries and labels
-datawid = np.load(datafile, allow_pickle=True)
+datawid = np.load(datafile_socioecon, allow_pickle=True)
 X = np.copy(datawid['X'])
 countries_wid = np.copy(datawid['country_codes'])
 labels_vars = np.copy(datawid['labels_vars'])
@@ -33,8 +45,7 @@ q = X.shape[1]
 ucountries_wid = np.unique(countries_wid)
 
 # load brain data
-datafile = directory + 'preprocessed_data/' + name_data + '.npz'
-datvb = np.load(datafile, allow_pickle=True)
+datvb = np.load(datafile_braindata, allow_pickle=True)
 confounds = np.copy(datvb['confounds'])
 braindata = np.copy(datvb['braindata'])
 countries_vb_ = np.copy(datvb['countries'])
@@ -226,9 +237,8 @@ for t in range(T): # cycle through windows for training
             f1[t,t2,b] = metrics.f1_score(sex_te,sex_hat)
         
 
-datafile = directory_out + 'predict_sex_' + name_data + '.npz'
-print(datafile)
+print(datafile_out)
 
-np.savez(datafile, 
+np.savez(datafile_out, 
         accuracy=accuracy,f1=f1,choose=choose,
         age_grid=age_grid)

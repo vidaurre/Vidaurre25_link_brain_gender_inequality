@@ -1,4 +1,6 @@
 # Do some initial preprocessing of the country socioeconomic data
+# It assumes the world_inequiality_dataset was downloaded at the 'directory_socioeconomic_data' location
+# In the Github repository, this is 
 
 import pandas as pd
 import numpy as np
@@ -8,10 +10,15 @@ import country_converter
 labels_vars = ('GDP_i','GDP_b','NI_i','NI_b','NW_i','NW_b','WIR_i','WIR_b','CI_i','CI_b',
                'GI_i','GI_b','II1_i','II1_b','II2_i','II2_b','WI1_i','WI1_b','WI2_i','WI2_b','Gini','GII')
 
+# paths and names
+directory = '/Users/au654912/CloudOneDrive/Work/data/main_volbrain_repo/'
+directory_socioeconomic_data =  directory + '/socioeconomic_data_repo/'
+directory_socioeconomic_data_raw = directory_socioeconomic_data + '/raw_data/'
+directory_out = directory_socioeconomic_data + 'preprocessed_data/'
+datafile_out = directory_out  + '/wid.npz'
+datafile = directory + 'volbrain_repo/preprocessed_data/vol2Brain_931.npz'
+
 # retrieve countries present in volbrain - we are only concerned about these
-basedir = '/Users/au654912/'
-directory = basedir + '/CloudOneDrive/Work/data/'
-datafile = directory + 'volBrain/preprocessed_data/vol2Brain_931.npz'
 dat = np.load(datafile, allow_pickle=True)
 countries_vb = dat['countries']
 ucountries = np.unique(countries_vb)
@@ -36,9 +43,7 @@ R = 0.01 * np.eye(2)
 R[0,0] = 0
 J = 0
 
-nv = 8
-
-file = directory + '/world_inequiality_dataset/gross_domestic_product/WID_Data_21102024-122223.xls'
+file = directory_socioeconomic_data_raw + '/gross_domestic_product/WID_Data_21102024-122223.xls'
 ichar0 = 9 
 dat = pd.read_excel(file,keep_default_na=False,header=None)
 headers = dat.iloc[0,2:].values
@@ -50,7 +55,7 @@ nc = len(country_codes)
 X = np.zeros((nc,10*2 + 2))
 
 # GINI index
-file = directory + '/world_inequiality_dataset/P_Data_Extract_From_World_Development_Indicators/0912e9d4-2c12-4e3d-bb7f-a5a10d78d091_Data.csv'
+file = directory_socioeconomic_data_raw + '/P_Data_Extract_From_World_Development_Indicators/0912e9d4-2c12-4e3d-bb7f-a5a10d78d091_Data.csv'
 dat = pd.read_csv(file,sep=',')
 dat = dat.iloc[:217,:].values
 gini_all = dat[:,4:]
@@ -70,7 +75,7 @@ for j in range(nc):
 X[:,-2] = Xg
 
 # Gender Inequality index
-file = basedir + '/CloudOneDrive/Work/data//world_inequiality_dataset/GII.xlsx'
+file = directory_socioeconomic_data_raw + '/GII.xlsx'
 dat = pd.read_excel(file)
 GII_all = dat.iloc[:,1].values
 countries_gii = np.array(country_converter.convert(dat.iloc[:,0].values, to='ISO2') )
@@ -92,9 +97,9 @@ constructs = ['gross_domestic_product/WID_Data_21102024-122223.xls',
 ichar0v = [9,13,13,13,9,13,9,9]
 
 
-for iv in range(nv): # WID files/variables
+for iv in range(len(constructs)): # WID files/variables
 
-    file = directory + '/world_inequiality_dataset/' + constructs[iv]
+    file = directory_socioeconomic_data_raw + constructs[iv]
     ichar0 = ichar0v[iv]        
     print(file)
 
@@ -166,6 +171,6 @@ for iv in range(nv): # WID files/variables
 X = (X - np.nanmean(X, axis=0)) / np.nanstd(X, axis=0)
 X[np.isnan(X)] = 0
 
-datafile = basedir + '/CloudOneDrive/Work/data/volBrain/wid.npz'
-np.savez(datafile, country_codes=country_codes,labels_vars=labels_vars,X=X)
+print(datafile_out)
+np.savez(datafile_out, country_codes=country_codes,labels_vars=labels_vars,X=X)
 

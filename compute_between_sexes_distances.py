@@ -14,20 +14,28 @@
 # which in this case contain the same values for all pairs within the country. 
 
 
+import sys
 import numpy as np
 import country_converter
 from sklearn.decomposition import PCA
 from scipy.spatial.distance import cdist
 
+real_data = (len(sys.argv)==1) or int(sys.argv[1])
+
+if not real_data: print('Running on synthetic data')
+
 window_length = 10 # width of the age windows
 
 # paths and names
-directory = '/Users/au654912/CloudOneDrive/Work/data/volBrain/'
-directory_out = '/Users/au654912/CloudOneDrive/Work/data/volBrain/preprocessed_data/'  
-name_data = 'vol2Brain_931'
-datafile = directory + 'wid.npz'
+directory = '/Users/au654912/CloudOneDrive/Work/data/main_volbrain_repo/'
+directory_out = directory + 'volBrain_repo/preprocessed_data/'
+directory_socioecon = directory + 'socioeconomic_data_repo/preprocessed_data/'
+directory_braindata = directory + 'volbrain_repo/preprocessed_data/'
+if real_data: datafile_out = directory_out + 'sexDist_vol2Brain_931.npz'
+else: datafile_out = directory_out + 'sexDist_vol2Brain_931_synth.npz'
 
 # load socioeconomical data
+datafile = directory_socioecon + 'wid.npz'
 datawid = np.load(datafile, allow_pickle=True)
 X = datawid['X']
 labels_vars = np.copy(datawid['labels_vars'])
@@ -36,7 +44,7 @@ countries_wid = np.copy(datawid['country_codes'])
 GI = datawid['X'][:,labels_vars == 'GI_i'] # gender inequality
 II = datawid['X'][:,labels_vars == 'II1_i'] # income inequality
 WI = datawid['X'][:,labels_vars == 'WI1_i'] # wealth inequality 
-GII = datawid['X'][:,labels_vars == 'GII'] # gender inequality index
+GII = datawid['X'][:,labels_vars == 'GII'] # gender inequality i`ndex
 Gini = datawid['X'][:,labels_vars == 'Gini'] # gender inequality index
 
 # GDP stuff, get the first PC over the three related variables, which are very correlated anyway
@@ -46,7 +54,8 @@ E = pca.transform(X[:,(0,2,4)])[:,0]
 E = np.expand_dims(E,1)
 
 # load volBrain data
-datafile = directory_out  + name_data + '.npz'
+if real_data: datafile = directory_braindata + 'vol2Brain_931.npz'
+else: datafile = directory_braindata + 'vol2Brain_931_synth.npz'
 datvb = np.load(datafile, allow_pickle=True)
 confounds = np.copy(datvb['confounds'])
 braindata = np.copy(datvb['braindata'])
@@ -102,7 +111,6 @@ for ic in range(Ncountries):
     C[idc_vb] = c
     N_per_country[ic] = np.sum(idc_vb)
 
-
 # remove countries with no valid subjects
 ucountries_vb = ucountries_vb[N_per_country>0]
 Ncountries = len(ucountries_vb)
@@ -112,7 +120,6 @@ D = D[take,:]
 C = C[take] # actually the same than countries_vb
 braindata = braindata[take,:]
 confounds = confounds[take,:]
-
 
 # socioeconomical info per country
 MD = np.zeros((Ncountries,3))
@@ -270,11 +277,10 @@ for t in range(T): # cycle through windows
     M_SNR.append(M_SNR_t)
 
     
-datafile_out = directory_out + 'sexDist_' + name_data + '.npz'
 print(datafile_out)
 
 # save for later use
-np.savez(datafile_out,  #K_Brain=np.array(K_Brain, dtype=object),
+np.savez(datafile_out,   
         M_Brain=np.array(M_Brain, dtype=object),
         M_WID=np.array(M_WID, dtype=object),
         M_age=np.array(M_age, dtype=object),

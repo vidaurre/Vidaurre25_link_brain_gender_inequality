@@ -3,11 +3,14 @@
 import pandas as pd
 import numpy as np
 
-directory_base = '/Users/au654912/CloudOneDrive/'
-df = pd.read_csv(directory_base + '/Work/data/volBrain/cleaned_volbrain_Diego/cleaned_fusion_vol2Brain_931.csv')
-name_data = 'vol2Brain_931'
+# paths and names
+directory = '/Users/au654912/CloudOneDrive/Work/data/main_volbrain_repo/'
+directory_out = directory + 'volBrain_repo/preprocessed_data/'
+datafile_out = directory_out  + 'vol2Brain_931.npz'
+datafile = directory + '/volBrain_repo/raw_data/cleaned_fusion_vol2Brain_931.csv'
 
- 
+df = pd.read_csv(datafile)
+
 def correct_age(age):
     if isinstance(age, str) and (age == "UNKNOWN" or age == "Unknown"):
         return np.nan
@@ -75,9 +78,8 @@ labels = labels[var_ht_0]
 
 countries = df['country'].to_numpy()
 
-datafile = directory_base + '/Work/data/volBrain/preprocessed_data/' + name_data + '.npz'
-print(datafile)
-np.savez(datafile, confounds=confounds,confounds_labels=confounds_labels,
+print(datafile_out)
+np.savez(datafile_out, confounds=confounds,confounds_labels=confounds_labels,
         braindata=braindata,countries=countries,labels=labels)
 
 
