@@ -1,5 +1,5 @@
 # Vidaurre25_link_brain_gender_inequality
-This repository contains the Python code for the paper "The link between gender inequality and the distribution of brain regions' relative sizes across the lifespan and the world""
+This repository contains the Python code for the paper "The link between gender inequality and the distribution of brain regions' relative sizes across the lifespan and the world"
 
 The pipeline can be run as:
 
