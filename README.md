@@ -11,7 +11,7 @@ This runs all the analyses to create the results reported in the paper.
 We refer to the script for reference to the various steps of the analysis, each of which is performed by a separate Python script. 
 The purpose of each script is documented in the header of the script.
 
-The first parameter of each script (excepting run_ttests, where it is the second) refers to whether we run the script on real data. 
+The first parameter of each Python script with run_all.sh (excepting run_ttests.py, where it is the second) refers to whether we run the script on real data. 
 The second parameter (excepting run_ttests, where it is the third) refers to whether we run a quick demo run as a sanity check (for example, with only a few permutations in the permutation testing). 
 
 Unfortunately, due to legal requirements, the brain data cannot be shared, although it can be requested formally to the data owners. 
